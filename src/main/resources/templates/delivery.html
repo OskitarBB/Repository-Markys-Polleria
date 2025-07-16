@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Font Awesome  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- CSS local -->
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <link rel="stylesheet" th:href="@{/css/carrito.css}">
+    <link rel="stylesheet" th:href="@{/css/modalpago.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <title>Marky's | Pide Online</title>
+
+
+
+</head>
+<body>
+<header class="d-flex align-items-center justify-content-between p-3">
+    <a th:href="@{/}">
+        <img class="logoprin" th:src="@{/img/logo_markys.png}" alt="Logo" style="width: 300px; height: 190px;">
+    </a>
+    <h1 class="bienvenida mb-0 text-center">Pida nuestros deliciosos pollos a la brasa</h1>
+</header>
+<div th:replace="componentes/fragments/navbar :: barra-navegacion"></div>
+
+<div class="barra-busqueda">
+    <form onsubmit="event.preventDefault(); filtrarDelivery();" style="
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #f1f1f1;
+        padding: 8px 12px;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    ">
+        <input type="text" id="filtroDelivery" placeholder="Buscar producto..." style="
+            padding: 6px 10px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            min-width: 200px;
+        "/>
+        <button type="submit" style="
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        ">
+            <i class="fa fa-search" style="margin-right: 2px;"></i> Buscar
+        </button>
+    </form>
+</div>
+
+
+<p id="mensaje-vacio" style="text-align: center; display: none; font-weight: bold;">
+    No se encontraron productos.
+</p>
+
+
+<section class="contenedor">
+    <!-- Contenedor de elementos -->
+    <div class="contenedor-items">
+        <div th:each="platillo : ${platillos}" class="item producto-delivery">
+            <span class="nombre-item nombre-producto" th:text="${platillo.nombre}">Nombre</span>
+            <img th:src="@{'/img/' + ${platillo.imagen}}" alt="Platillo" class="img-item">
+            <p class="descripcion-item" th:text="${platillo.descripcion}">
+                Descripción del platillo
+            </p>
+            <span class="precio-item" th:text="'S/. ' + ${platillo.precio}">S/.00.00</span>
+            <button class="boton-item">Agregar al Carrito</button>
+        </div>
+
+    </div>
+
+    <!-- Carrito de Compras -->
+    <div class="carrito" id="carrito">
+        <div class="header-carrito">
+            <h2>Tu Carrito</h2>
+        </div>
+
+        <div class="carrito-items">
+            <!-- Aquí se agregan los items por JS -->
+        </div>
+
+        <div class="carrito-total">
+            <div class="fila">
+                <strong>Tu Total</strong>
+                <span class="carrito-precio-total">S/. 0.00</span>
+            </div>
+            <button class="btn-pagar">Pagar <i class="fa-solid fa-bag-shopping"></i></button>
+        </div>
+    </div>
+</section>
+<!-- Modal de opciones -->
+<div id="modalOpciones" class="modal">
+    <div class="modal-contenido">
+        <h3>¿Desea ordenar?</h3>
+        <button class="btn-recoger" onclick="mostrarModalDireccion()">
+            <i class="fas fa-store"></i> Recoger en tienda
+        </button>
+        <!--
+        <button class="btn-delivery" onclick="delivery()">
+            <i class="fas fa-motorcycle"></i> Delivery
+        </button>
+        -->
+        <button class="btn-cancelar" onclick="cerrarModal()">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+
+    </div>
+</div>
+
+<!-- Segundo Modal: Dirección de recogida -->
+<div id="modalDireccion" class="modal">
+    <div class="modal-contenido">
+        <h3><i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i> Dirección de recogida</h3>
+        <h3>Debe acercarse a nuestra sede para recoger su pedido:</h3>
+        <p>Cal. Pérez Figuerola 265 - A media cuadra de Plaza de Pisco</p>
+        <p>¿Desea continuar con el pago?</p>
+        <button onclick="continuarConPago()">Continuar con el Pago</button>
+        <!--Boton CheckoutPro para MercadoPago-->
+        <div id="mercadopago-button"></div>
+        <button onclick="cerrarModalDireccion()">Cancelar</button>
+    </div>
+</div>
+
+<div th:replace="componentes/footer :: footer-general"></div>
+<script th:src="@{/js/delivery.js}"></script>
+</body>
+
+</html>

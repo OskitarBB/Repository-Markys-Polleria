@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('/img/pollo_fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #c80c04;
+            color: yellow;
+            padding: 20px;
+            min-height: 100vh;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .bienvenida {
+            background-color: white;
+            color: black;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .bienvenida p {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .bienvenida .username {
+            font-size: 28px;
+            font-weight: bold;
+            color: red;
+        }
+
+        .imagen-admin-container {
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .imagen-admin {
+            display: block;
+            margin: 0 auto;
+            width: 120px;
+            height: auto;
+        }
+        .opciones{
+            text-align: center;
+        }
+        .opciones li {
+            background-color: green;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            list-style: none;
+            text-align: center;
+        }
+
+        .opciones li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .opciones li a:hover {
+            text-decoration: underline;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 2px solid #c80c04;
+        }
+
+        th {
+            background-color: yellow;
+            color: black;
+            cursor: pointer;
+        }
+
+        td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: darkblue;
+        }
+
+        .btn-accion {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        select, input {
+            margin: 5px 0;
+            padding: 6px;
+        }
+
+        #formularioNuevoUsuario {
+            background-color: #fff3cd;
+            border: 2px solid red;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .rol-image {
+            margin-top: 10px;
+            width: 150px;
+            height: auto;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        h3 {
+            color: #b30000;
+        }
+        .comentario-celda {
+    max-width: 250px;       /* Ajusta según lo que necesites */
+    word-wrap: break-word;
+    white-space: pre-wrap;  /* Respeta saltos de línea si hay */
+}
+   .ventas-card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  max-width: 1000px;
+  margin: 0 auto;
+  margin-top: 2rem;
+  color: #2c3e50; /* texto legible */
+}
+
+    </style>
+
+    <script>
+        let ordenAscendente = true;
+
+        function mostrarFormulario() {
+            const form = document.getElementById("formularioNuevoUsuario");
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+
+        function ordenarTablaPorId() {
+            const table = document.getElementById("tablaUsuarios");
+            const rows = Array.from(table.rows).slice(1);
+            rows.sort((a, b) => {
+                const idA = parseInt(a.cells[0].textContent);
+                const idB = parseInt(b.cells[0].textContent);
+                return ordenAscendente ? idA - idB : idB - idA;
+            });
+            rows.forEach(row => table.appendChild(row));
+            ordenAscendente = !ordenAscendente;
+        }
+
+        function filtrarPorRol() {
+            const rolSeleccionado = document.getElementById("usuario_rolFiltro").value;
+            const rows = Array.from(document.getElementById("tablaUsuarios").rows).slice(1);
+            rows.forEach(row => {
+                const rolCell = row.cells[6].textContent.trim();
+                row.style.display = (rolSeleccionado === "todos" || rolCell.includes(rolSeleccionado)) ? "" : "none";
+            });
+        }
+
+        function actualizarImagenRolNuevo() {
+            const rol = document.getElementById("usuario_rolNuevo").value;
+            const img = document.getElementById("usuario_imagenRolNuevo");
+            if (rol === "ADMIN") {
+                img.src = "/img/Gallina_fina.png";
+                img.alt = "Gallina Admin";
+            } else {
+                img.src = "/img/Gallina_cliente.png";
+                img.alt = "Gallina Cliente";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectRol = document.getElementById("usuario_rolNuevo");
+            if (selectRol) {
+                selectRol.addEventListener("change", actualizarImagenRolNuevo);
+                actualizarImagenRolNuevo(); // Inicial
+            }
+        });
+    </script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="imagen-admin-container">
+        <img class="imagen-admin" src="/img/Gallina_fina.png" alt="Gallina Admin">
+    </div>
+    <div class="bienvenida">
+        <p>Bienvenido,</p>
+        <p class="username" th:text="${username}">Usuario</p>
+    </div>
+
+    <h2>Opciones:</h2>
+    <ul class="opciones">
+        <li><a href="/admin/usuarios?seccion=usuarios">Usuarios</a></li>
+        <li><a href="/admin/usuarios?seccion=platillos">Productos</a></li>
+        <li><a href="/admin/ventas">Ventas</a></li>
+        <li><a href="/logout">Cerrar sesión</a></li>
+    </ul>
+</div>
+
+<div class="main-content" th:if="${seccion == 'usuarios' and usuarios != null}">
+    <h3>Lista de Usuarios</h3>
+
+    <form method="get" action="/admin/usuarios">
+        <label for="usuario_rolFiltro">Filtrar por Rol:</label>
+        <select name="rol" id="usuario_rolFiltro" onchange="this.form.submit()">
+            <option value="todos" th:selected="${rolSeleccionado == 'todos'}">Todos</option>
+            <option value="ADMIN" th:selected="${rolSeleccionado == 'ADMIN'}">ADMIN</option>
+            <option value="CLIENTE" th:selected="${rolSeleccionado == 'CLIENTE'}">CLIENTE</option>
+        </select>
+    </form>
+
+    <button onclick="ordenarTablaPorId()">Ordenar por ID</button>
+
+    <table id="tablaUsuarios">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Correo</th>
+            <th>Contraseña</th>
+            <th>Estado</th>
+            <th>Comentario</th>
+            <th>Roles</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="usuario : ${usuarios}">
+            <td th:text="${usuario.id}">1</td>
+            <td th:text="${usuario.username}">user</td>
+            <td th:text="${usuario.nombre}">nombre</td>
+            <td th:text="${usuario.apellido}">apellido</td>
+            <td th:text="${usuario.correo}">correo</td>
+
+            <!-- ESTA ES LA LÍNEA CORREGIDA -->
+            <td th:text="|${#strings.substring(usuario.password, 0, 10)}...|" style="font-family: monospace;"></td>
+
+            <td th:text="${usuario.estado}">vigente</td>
+            <td class="comentario-celda" th:text="${usuario.comentario}">comentario</td>
+            <td>
+                <span th:each="rol : ${usuario.roles}" th:text="${rol.nombre + ' '}"/>
+            </td>
+            <td>
+                <a th:href="@{/admin/usuarios/{id}/editar(id=${usuario.id})}">
+                    <button class="btn-accion">Editar</button>
+                </a>
+
+                <span th:if="${usuario.estado.name() != 'retirado'}">
+            <a th:href="@{/admin/usuarios/{id}/eliminar(id=${usuario.id})}">
+                <button class="btn-accion"
+                        type="button"
+                        onclick="abrirModalEliminar([[${usuario.id}]], '[[${usuario.username}]]')">
+                    Eliminar
+                </button>
+            </a>
+        </span>
+
+                <span th:if="${usuario.estado.name() == 'retirado'}">
+            <form th:action="@{/admin/usuarios/{id}/eliminar-definitivo(id=${usuario.id})}" method="post"
+                  style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar permanentemente al usuario retirado?');">
+                <button type="submit" class="btn-accion" style="background-color: darkred; color: white;">
+                    Eliminar Definitivamente
+                </button>
+            </form>
+        </span>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+
+    <button onclick="mostrarFormulario()">Agregar Nuevo Usuario</button>
+
+    <div id="formularioNuevoUsuario" style="display: none;">
+        <h3>Formulario de Nuevo Usuario</h3>
+        <form action="#" th:action="@{/admin/usuarios}" method="post">
+            <label for="usuario_username">Username:</label>
+            <input type="text" id="usuario_username" name="username" required><br>
+
+            <label for="usuario_password">Contraseña:</label>
+            <input type="password" id="usuario_password" name="password" required><br>
+
+            <label for="usuario_nombre">Nombre:</label>
+            <input type="text" id="usuario_nombre" name="nombre" required><br>
+
+            <label for="usuario_apellido">Apellido:</label>
+            <input type="text" id="usuario_apellido" name="apellido" required><br>
+
+            <label for="usuario_correo">Correo:</label>
+            <input type="email" id="usuario_correo" name="correo" required><br>
+
+            <label for="usuario_rolNuevo">Rol:</label>
+            <select id="usuario_rolNuevo" name="rol">
+                <option value="ADMIN">ADMIN</option>
+                <option value="CLIENTE">CLIENTE</option>
+            </select><br>
+
+            <img id="usuario_imagenRolNuevo" class="rol-image" src="/img/Gallina_fina.png" alt="Imagen Rol"><br>
+
+            <button type="submit">Crear Usuario</button>
+        </form>
+    </div>
+</div>
+
+<div class="main-content" th:if="${seccion == 'platillos' and platillos != null}">
+    <div class="main-content">
+        <h3>Lista de Productos</h3>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Imagen</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="platillo : ${platillos}">
+                <td th:text="${platillo.id}">1</td>
+                <td th:text="${platillo.nombre}">Nombre</td>
+                <td th:text="${platillo.descripcion}">Descripción</td>
+                <td th:text="${platillo.precio}">S/ 0.00</td>
+                <td th:text="${platillo.estado}">DISPONIBLE</td>
+                <td>
+
+                    <img th:src="@{'/img/' + ${platillo.imagen}}" alt="Imagen" style="width: 100px;">
+
+
+                </td>
+                <td>
+                    <a th:href="@{/admin/platillos/{id}/editar(id=${platillo.id})}">
+                        <button class="btn-accion">Editar</button>
+                    </a>
+
+                    <form th:action="@{/admin/platillos/{id}/eliminar(id=${platillo.id})}" method="post" style="display:inline;">
+                        <button class="btn-accion" type="submit" onclick="return confirm('¿Eliminar este platillo?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <a href="/admin/platillos/nuevo">
+            <button id="btnAgregarPlatillo">Agregar Platillo</button>
+        </a>
+    </div>
+</div>
+
+<!-- Modal Agregar -->
+<div id="modalAgregarPlatillo" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5);">
+    <div style="background: white; padding: 20px; width: 400px; margin: 100px auto; border-radius: 10px;">
+        <h3>Nuevo Platillo</h3>
+        <form th:action="@{/admin/platillos/crear}" method="post" enctype="multipart/form-data">
+            <label>Nombre:</label><br>
+            <input type="text" name="nombre" required><br>
+
+            <label>Descripción:</label><br>
+            <textarea name="descripcion" rows="3" required></textarea><br>
+
+            <label>Precio:</label><br>
+            <input type="number" name="precio" step="0.01" min="0" required><br>
+
+            <label>Estado:</label><br>
+            <select name="estado" required>
+                <option value="DISPONIBLE">DISPONIBLE</option>
+                <option value="AGOTADO">AGOTADO</option>
+            </select><br>
+
+            <label>Imagen:</label><br>
+            <input type="file" name="imagen" accept="image/*" required><br><br>
+
+            <button type="submit">Guardar Platillo</button>
+            <button type="button" id="btnCerrarModal">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="modalEditarPlatillo" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5);">
+    <div style="background: white; padding: 20px; width: 400px; margin: 100px auto; border-radius: 10px;">
+        <h3>Editar Platillo</h3>
+        <form th:action="@{/admin/platillos/editar}" method="post" enctype="multipart/form-data">
+            <input type="hidden" id="editar_id" name="id">
+
+            <label>Nombre:</label><br>
+            <input type="text" id="editar_nombre" name="nombre" required><br>
+
+            <label>Descripción:</label><br>
+            <textarea id="editar_descripcion" name="descripcion" rows="3" required></textarea><br>
+
+            <label>Precio:</label><br>
+            <input type="number" id="editar_precio" name="precio" step="0.01" min="0" required><br>
+
+            <label>Estado:</label><br>
+            <select id="editar_estado" name="estado" required>
+                <option value="DISPONIBLE">DISPONIBLE</option>
+                <option value="AGOTADO">AGOTADO</option>
+            </select><br>
+
+            <label>Imagen:</label><br>
+            <input type="file" name="imagen" accept="image/*"><br><br>
+
+            <button type="submit">Guardar Cambios</button>
+            <button type="button" id="btnCerrarEditarModal">Cancelar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div id="modalEliminarPlatillo" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5);">
+    <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:10px;">
+        <h3>Confirmar Eliminación</h3>
+        <p id="mensajeEliminar">¿Estás seguro de que deseas eliminar este platillo?</p>
+        <form id="formEliminarPlatillo" method="post">
+        <input type="hidden" id="eliminar_id" name="id">
+            <button type="submit">Sí, eliminar</button>
+            <button type="button" onclick="cerrarModalEliminarPlatillo()">Cancelar</button>
+        </form>
+    </div>
+</div>
+<!-- SECCIÓN DE VENTAS -->
+<div th:if="${seccion == 'ventas'}" class="inventario-container">
+    <div class="ventas-card">
+        <div class="header-container">
+            <h1>Ventas por Día</h1>
+        </div>
+
+        <!-- Tabla de Totales por Día -->
+        <div class="table-container">
+            <table class="table product-table">
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Total (S/)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i, stat : ${#numbers.sequence(0, fechas.size() - 1)}">
+                    <td th:text="${fechas[stat.index]}">2025-07-01</td>
+                    <td th:text="'S/ ' + ${#numbers.formatDecimal(totales[stat.index], 1, 2)}">S/ 0.00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Gráfico de barras con Chart.js -->
+        <div class="chart-container" style="margin-top: 40px;">
+            <canvas id="ventasChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <hr style="margin: 40px 0; border: 1px solid #ccc;" />
+
+    <div class="ventas-card">
+        <div class="header-container">
+            <h1>Platillos Más Vendidos</h1>
+        </div>
+
+        <!-- Tabla de Platillos Más Vendidos -->
+        <div class="table-container">
+            <table class="table product-table">
+                <thead>
+                <tr>
+                    <th>Platillo</th>
+                    <th>Cantidad Vendida</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i, stat : ${#numbers.sequence(0, nombresPlatillos.size() - 1)}">
+                    <td th:text="${nombresPlatillos[stat.index]}">Nombre Platillo</td>
+                    <td th:text="${cantidadesVendidas[stat.index]}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Gráfico de barras de Platillos Más Vendidos -->
+        <div class="chart-container" style="margin-top: 40px;">
+            <canvas id="platillosChart" height="100"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Cargar librería Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Script de gráfico de ventas por día -->
+<script th:inline="javascript">
+    const fechas = /*[[${fechas}]]*/ [];
+    const totales = /*[[${totales}]]*/ [];
+
+    const ctx = document.getElementById('ventasChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: fechas,
+            datasets: [{
+                label: 'Ventas por día (S/)',
+                data: totales,
+                backgroundColor: '#4CAF50'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+
+<!-- Script de gráfico de platillos más vendidos -->
+<script th:inline="javascript">
+    const nombresPlatillos = /*[[${nombresPlatillos}]]*/ [];
+    const cantidadesVendidas = /*[[${cantidadesVendidas}]]*/ [];
+
+    const ctxPlatillos = document.getElementById('platillosChart');
+    new Chart(ctxPlatillos, {
+        type: 'bar',
+        data: {
+            labels: nombresPlatillos,
+            datasets: [{
+                label: 'Cantidad Vendida',
+                data: cantidadesVendidas,
+                backgroundColor: '#f39c12'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+
+
+</div>
+<!-- Scripts para manejar modales -->
+<script>
+    function abrirModalEliminar(id, username) {
+      document.getElementById("modalEliminar").style.display = "flex";
+      document.getElementById("modalUsername").innerText = username;
+
+      // Establecer dinámicamente la acción del formulario
+      const form = document.getElementById("formEliminar");
+      form.action = "/admin/usuarios/" + id + "/eliminar";
+  }
+
+  function cerrarModalEliminar() {
+      document.getElementById("modalEliminar").style.display = "none";
+      document.getElementById("comentarioInput").value = "";
+  }
+
+  function prepararEnvio() {
+      const comentario = document.getElementById("comentarioInput").value;
+      document.getElementById("comentarioInputHidden").value = comentario;
+
+      // Confirmamos el envío del formulario
+      return true;
+  }
+
+const btnAbrir = document.getElementById('btnAgregarPlatillo');
+const modalAgregar = document.getElementById('modalAgregarPlatillo');
+const btnCerrar = document.getElementById('btnCerrarModal');
+
+btnAbrir.addEventListener('click', () => {
+  modalAgregar.style.display = 'block';
+});
+
+btnCerrar.addEventListener('click', () => {
+  modalAgregar.style.display = 'none';
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === modalAgregar) {
+      modalAgregar.style.display = 'none';
+  }
+  if (e.target === modalEditar) {
+      modalEditar.style.display = 'none';
+  }
+  if (e.target === modalEliminar) {
+      modalEliminar.style.display = 'none';
+  }
+});
+
+// Modal Editar
+const modalEditar = document.getElementById('modalEditarPlatillo');
+const btnCerrarEditar = document.getElementById('btnCerrarEditarModal');
+
+function abrirModalEditarDesdeBoton(boton) {
+  const id = boton.getAttribute('data-id');
+  const nombre = boton.getAttribute('data-nombre');
+  const descripcion = boton.getAttribute('data-descripcion');
+  const precio = boton.getAttribute('data-precio');
+  const estado = boton.getAttribute('data-estado');
+
+  modalEditar.style.display = 'block';
+  document.getElementById('editar_id').value = id;
+  document.getElementById('editar_nombre').value = nombre;
+  document.getElementById('editar_descripcion').value = descripcion;
+  document.getElementById('editar_precio').value = precio;
+  document.getElementById('editar_estado').value = estado;
+}
+
+btnCerrarEditar.addEventListener('click', () => {
+  modalEditar.style.display = 'none';
+});
+
+// Modal Eliminar
+const modalEliminar = document.getElementById('modalEliminarPlatillo');
+const formEliminar = document.getElementById('formEliminarPlatillo');
+const mensajeEliminar = document.getElementById('mensajeEliminar');
+
+function abrirModalEliminarPlatillo(boton) {
+  const id = boton.getAttribute('data-id');
+  const nombre = boton.getAttribute('data-nombre');
+
+  mensajeEliminar.textContent = `¿Estás seguro de que deseas eliminar el platillo "${nombre}" ?`;
+
+  formEliminar.setAttribute('action', `/admin/platillos/${id}/eliminar`);
+  document.getElementById('eliminar_id').value = id;
+
+  modalEliminar.style.display = 'block';
+}
+
+function cerrarModalEliminarPlatillo() {
+  modalEliminar.style.display = 'none';
+}
+
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
